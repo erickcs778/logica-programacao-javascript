@@ -1,0 +1,15 @@
+{
+  "saldo": 939.78,
+  "historico": [
+    {
+      "item": "carne",
+      "preco": 10.22,
+      "data": "30/01/2026"
+    },
+    {
+      "item": "cablo",
+      "preco": 50,
+      "data": "30/01/2026"
+    }
+  ]
+}

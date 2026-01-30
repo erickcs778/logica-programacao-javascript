@@ -25,22 +25,41 @@ if (fs.existsSync('dados.json')) {
     console.log("> Iniciando novo registro (Saldo: R$ 1000.00)");
 }
 
-// --- 3. LOOP DE COMPRAS ---
+// --- 3. LOOP DE COMPRAS (COM VALIDAÇÃO) ---
 let continuar = 's';
 
 while (continuar.toLowerCase() === 's') {
     let nome = input.question("\nO que voce comprou? ");
-    let valor = parseFloat(input.question(`Quanto custou o(a) ${nome}? `));
+    let valor;
+
+    // Loop de Segurança: Não deixa o programa quebrar se o usuário digitar texto
+    while (true) {
+        let entrada = input.question(`Quanto custou o(a) ${nome}? `);
+        
+        // Corrige a vírgula para ponto (ex: 5,50 vira 5.50)
+        valor = parseFloat(entrada.replace(',', '.'));
+
+        // Verifica se é um número válido e positivo
+        if (!isNaN(valor) && valor > 0) {
+            break; // Sai da "prisão" da validação
+        } else {
+            console.log("❌ Valor invalido! Por favor, digite apenas numeros (ex: 12.50).");
+        }
+    }
 
     if (valor <= dados.saldo) {
         dados.saldo -= valor;
-        dados.historico.push({ item: nome, preco: valor, data: new Date().toLocaleDateString() });
+        dados.historico.push({ 
+            item: nome, 
+            preco: valor, 
+            data: new Date().toLocaleDateString() 
+        });
 
         // SALVA NO ARQUIVO
         fs.writeFileSync('dados.json', JSON.stringify(dados, null, 2));
-        console.log("Registrado com sucesso!");
+        console.log("✅ Registrado com sucesso!");
     } else {
-        console.log("ERRO: Saldo insuficiente!");
+        console.log("⚠️ ERRO: Saldo insuficiente!");
     }
 
     continuar = input.question("Registrar outro? (s/n): ");
