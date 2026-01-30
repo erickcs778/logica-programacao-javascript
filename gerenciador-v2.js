@@ -1,3 +1,8 @@
+// 1. Configura o terminal para aceitar acentos
+if (process.platform === 'win32') {
+    process.stdin.setEncoding('utf8');
+}
+
 const input = require('readline-sync');
 const fs = require('fs');
 
@@ -5,7 +10,7 @@ const fs = require('fs');
 let dados = { saldo: 1000, historico: [] };
 const ARQUIVO = 'dados.json';
 
-// --- FUNÇÕES DE APOIO (O que os recrutadores amam ver) ---
+// --- FUNÇÕES DE APOIO ---
 
 function carregarDados() {
     if (fs.existsSync(ARQUIVO)) {
@@ -18,12 +23,9 @@ function salvarDados() {
     fs.writeFileSync(ARQUIVO, JSON.stringify(dados, null, 2));
 }
 
-function exibirSaldo() {
-    console.log(`\n💰 SALDO ATUAL: R$ ${dados.saldo.toFixed(2)}`);
-}
-
 function registrarCompra() {
-    let nome = input.question("\nO que voce comprou? ");
+    // Pegando o nome com suporte a acentos
+    let nome = input.question("\nO que voce comprou? ", { encoding: 'utf8' });
     let valor;
 
     while (true) {
@@ -36,7 +38,11 @@ function registrarCompra() {
 
     if (valor <= dados.saldo) {
         dados.saldo -= valor;
-        dados.historico.push({ item: nome, preco: valor, data: new Date().toLocaleDateString() });
+        dados.historico.push({ 
+            item: nome, 
+            preco: valor, 
+            data: new Date().toLocaleDateString() 
+        });
         salvarDados();
         console.log("✅ Compra registrada!");
     } else {
@@ -53,17 +59,19 @@ function exibirExtrato() {
             console.log(`[${c.data}] ${c.item}: R$ ${c.preco.toFixed(2)}`);
         });
     }
-    exibirSaldo();
+    console.log(`\n💰 SALDO ATUAL: R$ ${dados.saldo.toFixed(2)}`);
 }
 
-// --- LOOP PRINCIPAL (O CORAÇÃO DO SISTEMA) ---
+// --- LOOP PRINCIPAL ---
 
 function iniciarSistema() {
     carregarDados();
     let rodando = true;
 
     while (rodando) {
-        console.log("\n--- MENU FINANCEIRO ---");
+        console.log("\n==========================");
+        console.log("    MENU FINANCEIRO");
+        console.log("==========================");
         console.log("1. Registrar Compra");
         console.log("2. Ver Extrato");
         console.log("3. Resetar Dados");
@@ -75,9 +83,10 @@ function iniciarSistema() {
             case '1': registrarCompra(); break;
             case '2': exibirExtrato(); break;
             case '3': 
-                if (input.question("Tem certeza? (s/n): ") === 's') {
+                if (input.question("Tem certeza que deseja apagar tudo? (s/n): ").toLowerCase() === 's') {
                     dados = { saldo: 1000, historico: [] };
                     salvarDados();
+                    console.log("=> Historico resetado!");
                 }
                 break;
             case '4': 

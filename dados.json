@@ -1,4 +1,15 @@
 {
-  "saldo": 1000,
-  "historico": []
+  "saldo": 991.02,
+  "historico": [
+    {
+      "item": "sal",
+      "preco": 2.99,
+      "data": "30/01/2026"
+    },
+    {
+      "item": "feijao",
+      "preco": 5.99,
+      "data": "30/01/2026"
+    }
+  ]
 }
