@@ -1,78 +1,92 @@
 const input = require('readline-sync');
 const fs = require('fs');
 
-console.log("\n====================================");
-console.log("    GERENCIADOR FINANCEIRO PRO");
-console.log("====================================\n");
+// Configurações Iniciais
+let dados = { saldo: 1000, historico: [] };
+const ARQUIVO = 'dados.json';
 
-// --- 1. OPÇÃO DE DELETAR (RESET) ---
-if (fs.existsSync('dados.json')) {
-    let desejaResetar = input.question("Deseja apagar o historico e comecar do zero? (s/n): ");
-    if (desejaResetar.toLowerCase() === 's') {
-        fs.unlinkSync('dados.json');
-        console.log("=> Arquivo de dados deletado!");
+// --- FUNÇÕES DE APOIO (O que os recrutadores amam ver) ---
+
+function carregarDados() {
+    if (fs.existsSync(ARQUIVO)) {
+        const conteudo = fs.readFileSync(ARQUIVO, 'utf8');
+        dados = JSON.parse(conteudo);
     }
 }
 
-// --- 2. CARREGAR DADOS ---
-let dados = { saldo: 1000, historico: [] };
-
-if (fs.existsSync('dados.json')) {
-    const arquivo = fs.readFileSync('dados.json', 'utf8');
-    dados = JSON.parse(arquivo);
-    console.log(`> Saldo Recuperado: R$ ${dados.saldo.toFixed(2)}`);
-} else {
-    console.log("> Iniciando novo registro (Saldo: R$ 1000.00)");
+function salvarDados() {
+    fs.writeFileSync(ARQUIVO, JSON.stringify(dados, null, 2));
 }
 
-// --- 3. LOOP DE COMPRAS (COM VALIDAÇÃO) ---
-let continuar = 's';
+function exibirSaldo() {
+    console.log(`\n💰 SALDO ATUAL: R$ ${dados.saldo.toFixed(2)}`);
+}
 
-while (continuar.toLowerCase() === 's') {
+function registrarCompra() {
     let nome = input.question("\nO que voce comprou? ");
     let valor;
 
-    // Loop de Segurança: Não deixa o programa quebrar se o usuário digitar texto
     while (true) {
         let entrada = input.question(`Quanto custou o(a) ${nome}? `);
-        
-        // Corrige a vírgula para ponto (ex: 5,50 vira 5.50)
         valor = parseFloat(entrada.replace(',', '.'));
 
-        // Verifica se é um número válido e positivo
-        if (!isNaN(valor) && valor > 0) {
-            break; // Sai da "prisão" da validação
-        } else {
-            console.log("❌ Valor invalido! Por favor, digite apenas numeros (ex: 12.50).");
-        }
+        if (!isNaN(valor) && valor > 0) break;
+        console.log("❌ Valor invalido!");
     }
 
     if (valor <= dados.saldo) {
         dados.saldo -= valor;
-        dados.historico.push({ 
-            item: nome, 
-            preco: valor, 
-            data: new Date().toLocaleDateString() 
-        });
-
-        // SALVA NO ARQUIVO
-        fs.writeFileSync('dados.json', JSON.stringify(dados, null, 2));
-        console.log("✅ Registrado com sucesso!");
+        dados.historico.push({ item: nome, preco: valor, data: new Date().toLocaleDateString() });
+        salvarDados();
+        console.log("✅ Compra registrada!");
     } else {
-        console.log("⚠️ ERRO: Saldo insuficiente!");
+        console.log("⚠️ Saldo insuficiente!");
     }
-
-    continuar = input.question("Registrar outro? (s/n): ");
 }
 
-// --- 4. EXTRATO FINAL ---
-console.log("\n--- SEU EXTRATO ---");
-if (dados.historico.length === 0) {
-    console.log("Nenhuma compra registrada.");
-} else {
-    dados.historico.forEach(compra => {
-        console.log(`[${compra.data}] ${compra.item}: R$ ${compra.preco.toFixed(2)}`);
-    });
+function exibirExtrato() {
+    console.log("\n--- EXTRATO DETALHADO ---");
+    if (dados.historico.length === 0) {
+        console.log("Nenhuma movimentacao encontrada.");
+    } else {
+        dados.historico.forEach(c => {
+            console.log(`[${c.data}] ${c.item}: R$ ${c.preco.toFixed(2)}`);
+        });
+    }
+    exibirSaldo();
 }
-console.log(`\nSALDO FINAL: R$ ${dados.saldo.toFixed(2)}`);
-console.log("====================================\n");
+
+// --- LOOP PRINCIPAL (O CORAÇÃO DO SISTEMA) ---
+
+function iniciarSistema() {
+    carregarDados();
+    let rodando = true;
+
+    while (rodando) {
+        console.log("\n--- MENU FINANCEIRO ---");
+        console.log("1. Registrar Compra");
+        console.log("2. Ver Extrato");
+        console.log("3. Resetar Dados");
+        console.log("4. Sair");
+        
+        let opcao = input.question("Escolha uma opcao: ");
+
+        switch (opcao) {
+            case '1': registrarCompra(); break;
+            case '2': exibirExtrato(); break;
+            case '3': 
+                if (input.question("Tem certeza? (s/n): ") === 's') {
+                    dados = { saldo: 1000, historico: [] };
+                    salvarDados();
+                }
+                break;
+            case '4': 
+                console.log("Saindo... Ate logo!");
+                rodando = false; 
+                break;
+            default: console.log("Opcao invalida!");
+        }
+    }
+}
+
+iniciarSistema();
