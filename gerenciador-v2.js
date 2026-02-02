@@ -24,7 +24,6 @@ function salvarDados() {
 }
 
 function registrarCompra() {
-    // Pegando o nome com suporte a acentos
     let nome = input.question("\nO que voce comprou? ", { encoding: 'utf8' });
     let valor;
 
@@ -47,6 +46,24 @@ function registrarCompra() {
         console.log("✅ Compra registrada!");
     } else {
         console.log("⚠️ Saldo insuficiente!");
+    }
+}
+
+function adicionarSaldo() {
+    let entrada = input.question("\nQuanto voce deseja depositar? ");
+    let valor = parseFloat(entrada.replace(',', '.'));
+
+    if (!isNaN(valor) && valor > 0) {
+        dados.saldo += valor;
+        dados.historico.push({ 
+            item: "(DEPOSITO)", 
+            preco: valor, 
+            data: new Date().toLocaleDateString() 
+        });
+        salvarDados();
+        console.log(`✅ R$ ${valor.toFixed(2)} adicionados com sucesso!`);
+    } else {
+        console.log("❌ Valor invalido!");
     }
 }
 
@@ -74,22 +91,24 @@ function iniciarSistema() {
         console.log("==========================");
         console.log("1. Registrar Compra");
         console.log("2. Ver Extrato");
-        console.log("3. Resetar Dados");
-        console.log("4. Sair");
+        console.log("3. Adicionar Saldo");
+        console.log("4. Resetar Dados");
+        console.log("5. Sair");
         
         let opcao = input.question("Escolha uma opcao: ");
 
         switch (opcao) {
             case '1': registrarCompra(); break;
             case '2': exibirExtrato(); break;
-            case '3': 
+            case '3': adicionarSaldo(); break;
+            case '4': 
                 if (input.question("Tem certeza que deseja apagar tudo? (s/n): ").toLowerCase() === 's') {
                     dados = { saldo: 1000, historico: [] };
                     salvarDados();
                     console.log("=> Historico resetado!");
                 }
                 break;
-            case '4': 
+            case '5': 
                 console.log("Saindo... Ate logo!");
                 rodando = false; 
                 break;
